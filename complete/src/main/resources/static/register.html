@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+
+<form id="form">
+    <h1>Регистрация</h1>
+
+    <label for="email">Email</label>
+    <input type="email" name="email" id="email" required>
+
+    <label for="pwd">Пароль</label>
+    <input type="password" name="pwd" id="pwd" required>
+
+    <input type="submit">
+</form>
+
+<a href="/">Главная</a>
+<a href="/login.html">Войти</a>
+
+<script>
+    var form = document.getElementById('form');
+
+    function handleSubmit(e) {
+        e.preventDefault();
+
+        var email = document.getElementById('email');
+        var pwd = document.getElementById('pwd');
+
+        var params = 'email=' + encodeURIComponent(email.value) + '&pwd=' + encodeURIComponent(pwd.value);
+
+        // fetch('http://localhost:8080/register?' + params)
+        fetch('http://localhost:8080/register', { method: 'POST', body: params })
+            .then(response => response.json())
+            .then(json => {
+                sessionStorage.setItem('token', json.token);
+                location.href = '/';
+            });
+    }
+
+    form.onsubmit = handleSubmit;
+</script>
+</body>
+</html>

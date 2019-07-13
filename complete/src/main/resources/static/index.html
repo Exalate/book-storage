@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+
+<h1>Главная</h1>
+
+<form id="form" enctype="multipart/form-data">
+    <input type="file" name="file" value="file" id="file">
+    <input type="submit" value="Загрузить" id="btn">
+    <p id="log"></p>
+</form>
+
+<script>
+    var token = sessionStorage.getItem('token');
+
+    if (!token) {
+        location.href = '/login.html';
+    }
+
+    var form = document.getElementById('form');
+    var log = document.getElementById('log');
+
+    function handleSubmit(e) {
+        e.preventDefault();
+
+        var formData = new FormData(form);
+
+        fetch('/upload', { method: 'POST', body: formData })
+            .then(response => response.text())
+            .then(text => {
+                log.innerText = 'Создан файл: ' + text;
+            });
+    }
+
+    form.onsubmit = handleSubmit;
+</script>
+
+</body>
+</html>
