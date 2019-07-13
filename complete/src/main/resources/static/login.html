@@ -29,18 +29,6 @@
 
     function handleSubmit(e) {
         e.preventDefault();
-
-        var email = document.getElementById('email');
-        var pwd = document.getElementById('pwd');
-
-        var params = 'email=' + encodeURIComponent(email.value) + '&pwd=' + encodeURIComponent(pwd.value);
-
-        fetch('http://localhost:8080/register?' + params)
-            .then(response => response.json())
-            .then(json => {
-                sessionStorage.setItem('token', json.token);
-                location.href = '/';
-            });
     }
 
     form.onsubmit = handleSubmit;
