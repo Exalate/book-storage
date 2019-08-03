@@ -25,7 +25,7 @@ public class RestApiController {
 
     //this.rootLocation = Paths.get(properties.getLocation());
 
-    @PostMapping("/register")
+    @PostMapping("/users/register")
     public Register postRegister(
             @RequestParam(value = "email", defaultValue = "") String email,
             @RequestParam(value = "pwd", defaultValue = "") String pwd
@@ -33,7 +33,7 @@ public class RestApiController {
         return new Register(email, pwd);
     }
 
-    @PostMapping("/login")
+    @PostMapping("/users/login")
     public Login postLogin(
             @RequestParam(value = "email", defaultValue = "") String email,
             @RequestParam(value = "pwd", defaultValue = "") String pwd
@@ -57,16 +57,15 @@ public class RestApiController {
         return new Bookshelves(name, token);
     }
 
-    @GetMapping("/bookshelf/{id}")
+    @GetMapping("/books")
     public Books getBooks(
             @RequestHeader(value = "x-access-token", defaultValue = "") String token,
-            @PathVariable(value = "id") int id
+            @RequestParam(value = "bookshelfId") int bookshelf_id
     ) throws SQLException {
-        System.out.println(token+" ------- "+id);
-        return new Books(id, token);
+        return new Books(bookshelf_id, token);
     }
 
-    @GetMapping("/book/{id}")
+    @GetMapping("/books/{id}")
     public Page getBook(
             @RequestHeader(value = "x-access-token", defaultValue = "") String token,
             @PathVariable(value = "id") int book_id
@@ -74,7 +73,7 @@ public class RestApiController {
         return new Page(book_id, token);
     }
 
-    @GetMapping("/book/{bookId}/page/{pageNumber}")
+    @GetMapping("/books/{bookId}/page/{pageNumber}")
     public Page getPage(
             @RequestHeader(value = "x-access-token", defaultValue = "") String token,
             @PathVariable(value = "bookId") int book_id,
@@ -87,7 +86,7 @@ public class RestApiController {
         return new Page(book_id, token, pageNumber);
     }
 
-    @GetMapping("/book/{bookId}/page/{pageNumber}/addBookmark")
+    @GetMapping("/books/{bookId}/page/{pageNumber}/addBookmark")
     public Object setPageBookmark(
             @RequestHeader(value = "x-access-token", defaultValue = "") String token,
             @PathVariable(value = "bookId") int book_id,
@@ -105,7 +104,7 @@ public class RestApiController {
         return null;//Bookmark(book_id, token, pageNumber);
     }
 
-    @PostMapping("/upload")
+    @PostMapping("/books/upload")
     public Book postUpload(
             @RequestParam("file") MultipartFile file,
             @RequestHeader(value = "x-access-token", defaultValue = "") String token,
