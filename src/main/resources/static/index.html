@@ -9,37 +9,261 @@
 </head>
 <body>
 
-<h1>Главная</h1>
-
-<form id="form" enctype="multipart/form-data">
-    <input type="file" name="file" value="file" id="file" required>
-    <input type="submit" value="Загрузить" id="btn">
+<h2>Список полок</h2>
+<form id="createShelfForm">
+    <input type="text" name="shelfName" id="shelfName" required>
+    <input type="submit" value="Создать полку" id="createShelfBtn">
     <p id="log"></p>
 </form>
+<ul id="bookshelves"></ul>
+
+<h2 id="booksTitle">Список книг</h2>
+<form id="uploadForm" enctype="multipart/form-data">
+    <label>
+        Название:
+        <input type="text" name="name" id="bookName" required>
+    </label>
+    <label>
+        Описание:
+        <input type="text" name="description" id="description" required>
+    </label>
+    <input type="file" name="file" value="file" id="file" required accept=".txt">
+    <input type="submit" value="Загрузить" id="uploadBtn" disabled>
+    <p id="uploadFormLog"></p>
+</form>
+<ul id="books"></ul>
+
+<h2 id="bookText">Текст книги</h2>
+<button id="prevPage">Пред.</button> <span id="currentPage"></span> <button id="nextPage">След.</button>
+<button id="addBookmark">Закладка</button>
+<p id="text"></p>
 
 <script>
-    var token = sessionStorage.getItem('token');
+    let shelfId = null;
+    let bookId = null;
+    let pageNumber = null;
+    const token = sessionStorage.getItem('token');
 
     if (!token) {
         location.href = '/login.html';
+    } else {
+        getBookshelves();
     }
 
-    var form = document.getElementById('form');
-    var log = document.getElementById('log');
+    const uploadForm = document.getElementById('uploadForm');
+    uploadForm.onsubmit = handleUpload;
 
-    function handleSubmit(e) {
+    const createShelfForm = document.getElementById('createShelfForm');
+    createShelfForm.onsubmit = handleCreateShelf;
+
+    // Зарузка книги
+    function handleUpload(e) {
         e.preventDefault();
 
-        var formData = new FormData(form);
+        const formData = new FormData(uploadForm);
+        formData.append('bookshelf_id', shelfId);
 
-        fetch('/upload', { method: 'POST', body: formData })
-            .then(response => response.text())
-            .then(text => {
-                log.innerText = 'Создан файл: ' + text;
+        fetch('/upload', {
+            method: 'POST',
+            body: formData,
+            headers: { 'x-access-token': sessionStorage.getItem('token') }
+        })
+            .then(response => response.json())
+            .then(json => {
+                if (json.errMessage !== '') {
+                    const uploadFormLog = document.getElementById('uploadFormLog');
+                    uploadFormLog.innerText = json.errMessage;
+                } else {
+                    const ul = document.getElementById('books');
+
+                    for (let key in json.books) {
+                        const book = json.books[key];
+
+                        const li = document.createElement('li');
+                        const a = document.createElement('a');
+                        a.href = '#';
+                        a.innerText = book;
+                        a.onclick = function(e) {
+                            e.preventDefault();
+                            handleBookClick(key);
+                        }
+                        li.appendChild(a);
+                        ul.appendChild(li);
+                    }
+                }
             });
     }
 
-    form.onsubmit = handleSubmit;
+    // Получение списка полок
+    function getBookshelves() {
+        fetch('/bookshelves', {
+            headers: { 'x-access-token': sessionStorage.getItem('token') }
+        })
+            .then(response => response.json())
+            .then(json => {
+                const ul = document.getElementById('bookshelves');
+
+                for (let key in json.bookshelves) {
+                    const shelf = json.bookshelves[key];
+
+                    const li = document.createElement('li');
+                    const a = document.createElement('a');
+                    a.href = '/bookshelf/' + key;
+                    a.innerText = shelf;
+                    a.onclick = function(e) {
+                        e.preventDefault();
+                        handleBookshelfClick(key, shelf, this);
+                    }
+                    li.appendChild(a);
+                    ul.appendChild(li);
+                }
+            })
+    }
+
+    // Обработка клика по полке
+    function handleBookshelfClick(id, name, node) {
+        shelfId = id;
+
+        fetch('/bookshelf/' + id, {
+            headers: { 'x-access-token': sessionStorage.getItem('token') }
+        })
+            .then(response => response.json())
+            .then(json => {
+                const uploadBtn = document.getElementById('uploadBtn');
+                uploadBtn.disabled = false;
+
+                const booksTitle = document.getElementById('booksTitle');
+                booksTitle.innerText = `Список книг на полке "${name}"`;
+
+                const ul = document.getElementById('books');
+                ul.innerHTML = '';
+
+                for (const key in json.books) {
+                    const book = json.books[key];
+
+                    const li = document.createElement('li');
+                    const a = document.createElement('a');
+                    a.href = '/book/' + key;
+                    a.innerText = book;
+                    a.onclick = function(e) {
+                        e.preventDefault();
+                        handleBookClick(key);
+                    }
+                    li.appendChild(a);
+                    ul.appendChild(li);
+                }
+            })
+    }
+
+    // Создание книжной полки
+    function handleCreateShelf(e) {
+        e.preventDefault();
+        const shelfName = document.getElementById('shelfName');
+
+        fetch('/bookshelves', {
+            body:  'name=' + encodeURIComponent(shelfName.value),
+            method: 'POST',
+            headers: {
+                'x-access-token': sessionStorage.getItem('token'),
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        })
+            .then(response => response.json())
+            .then(json => {
+                const ul = document.getElementById('bookshelves');
+
+                for (const key in json.bookshelves) {
+                    const shelf = json.bookshelves[key];
+
+                    const li = document.createElement('li');
+                    const a = document.createElement('a');
+                    a.href = '#';
+                    a.innerText = shelf;
+                    a.onclick = function(e) {
+                        e.preventDefault();
+                        handleBookshelfClick(key, shelf, this);
+                    }
+                    li.appendChild(a);
+                    ul.appendChild(li);
+                }
+            })
+    }
+
+    // Обработка клика по книге
+    function handleBookClick(id) {
+        bookId = id;
+
+         fetch('/book/' + id, {
+            headers: {
+                'x-access-token': sessionStorage.getItem('token'),
+            }
+        })
+            .then(response => response.json())
+            .then(json => {
+                const text = document.getElementById('text');
+                text.innerText = json.pageText;
+
+                const currentPage = document.getElementById('currentPage');
+                currentPage.innerText = pageNumber = json.pageNumber;
+            })
+    }
+
+    const prevPage = document.getElementById('prevPage');
+    const nextPage = document.getElementById('nextPage');
+
+    prevPage.onclick = function() {
+        if (pageNumber === 1 || !bookId) return;
+
+        fetch(`/book/${bookId}/page/${pageNumber - 1}`, {
+            headers: {
+                'x-access-token': sessionStorage.getItem('token'),
+            }
+        })
+            .then(response => response.json())
+            .then(json => {
+                if (json.errMessage !== '') {
+                    return;
+                }
+
+                const text = document.getElementById('text');
+                text.innerText = json.pageText;
+
+                const currentPage = document.getElementById('currentPage');
+                currentPage.innerText = pageNumber = json.pageNumber;
+            })
+    }
+
+    nextPage.onclick = function() {
+        if (!bookId) return;
+
+        fetch(`/book/${bookId}/page/${pageNumber + 1}`, {
+            headers: {
+                'x-access-token': sessionStorage.getItem('token'),
+            }
+        })
+            .then(response => response.json())
+            .then(json => {
+                if (json.errMessage !== '') {
+                    return;
+                }
+
+                const text = document.getElementById('text');
+                text.innerText = json.pageText;
+
+                const currentPage = document.getElementById('currentPage');
+                currentPage.innerText = pageNumber = json.pageNumber;
+            })
+    }
+
+    const addBookmark = document.getElementById('addBookmark');
+
+    addBookmark.onclick = function() {
+        fetch(`/book/${bookId}/page/${pageNumber}/addBookmark`, {
+            headers: {
+                'x-access-token': sessionStorage.getItem('token'),
+            }
+        })
+    }
 </script>
 
 </body>

@@ -1,0 +1,44 @@
+CREATE TABLE users
+(
+  user_id serial NOT NULL,
+  email varchar(50) NOT NULL,
+  token varchar(30) NOT NULL,
+  password varchar(100) NOT NULL,
+  PRIMARY KEY (user_id)
+)
+
+CREATE TABLE books
+(
+  book_id serial NOT NULL,
+  name varchar(50) NOT NULL,
+  user_id int NOT NULL,
+  description varchar(100),
+  bookshelf_id int,
+  PRIMARY KEY (book_id)
+)
+
+CREATE TABLE bookshelves
+(
+  bookshelf_id serial NOT NULL,
+  name varchar(50) NOT NULL,
+  user_id int NOT NULL,
+  PRIMARY KEY (bookshelf_id)
+)
+
+CREATE TABLE pages
+(
+  page_number int NOT NULL,
+  book_ID int NOT NULL,
+  content varchar(1000) NOT NULL
+)
+
+CREATE TABLE bookmarks
+(
+  user_id int NOT NULL,
+  book_id int NOT NULL,
+  page_number int NOT NULL
+)
+
+SELECT bookshelves.bookshelf_id, bookshelves.name
+    FROM users, bookshelves
+    WHERE users.user_id = bookshelves.user_id and users.token = 'g43g37u4vyu3536g'

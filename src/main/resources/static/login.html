@@ -21,6 +21,8 @@
     <input type="submit">
 </form>
 
+<p id="message"></p>
+
 <a href="/register.html">Регистрация</a>
 
 <script>
@@ -29,6 +31,24 @@
 
     function handleSubmit(e) {
         e.preventDefault();
+
+        var email = document.getElementById('email');
+        var pwd = document.getElementById('pwd');
+        var message = document.getElementById('message');
+
+        var params = 'email=' + encodeURIComponent(email.value) + '&pwd=' + encodeURIComponent(pwd.value);
+
+        fetch('/login', { method: 'POST', body: params, headers: { 'Content-Type': 'application/x-www-form-urlencoded' } })
+            .then(response => response.json())
+            .then(json => {
+                if (json.errMessage !== '') {
+                    message.innerText = json.errMessage;
+                    return;
+                }
+
+                sessionStorage.setItem('token', json.token);
+                location.href = '/';
+            });
     }
 
     form.onsubmit = handleSubmit;

@@ -3,22 +3,22 @@ package hello;
 import workDB.MainQueries;
 import java.sql.SQLException;
 
-public class Register {
+public class Login {
 
     private final String token;
     private final String errMessage;
 
-    public Register(String email, String pwd) throws SQLException {
+    public Login(String email, String pwd) throws SQLException {
 
         MainQueries mq = new MainQueries();
 
-        if(mq.EMAIL_ALREADY_EXISTS(email)) {
-            this.errMessage = "email already exists";
-            this.token = "";
+        token = mq.searchTokenByEmailAndPassword(email, pwd);
+
+        if(token == ""){
+            this.errMessage = "user is not found";
         }
         else{
             this.errMessage = "";
-            this.token = mq.newUser(email, pwd);
         }
 
         mq.conClose();

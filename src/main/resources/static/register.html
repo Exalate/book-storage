@@ -21,6 +21,8 @@
     <input type="submit">
 </form>
 
+<p id="message"></p>
+
 <a href="/login.html">Войти</a>
 
 <script>
@@ -31,13 +33,18 @@
 
         var email = document.getElementById('email');
         var pwd = document.getElementById('pwd');
+        var message = document.getElementById('message');
 
         var params = 'email=' + encodeURIComponent(email.value) + '&pwd=' + encodeURIComponent(pwd.value);
 
-        // fetch('http://localhost:8080/register?' + params)
-        fetch('http://localhost:8080/register', { method: 'POST', body: params })
+        fetch('/register', { method: 'POST', body: params, headers: { 'Content-Type': 'application/x-www-form-urlencoded' } })
             .then(response => response.json())
             .then(json => {
+                if (json.errMessage !== '') {
+                    message.innerText = json.errMessage;
+                    return;
+                }
+
                 sessionStorage.setItem('token', json.token);
                 location.href = '/';
             });
