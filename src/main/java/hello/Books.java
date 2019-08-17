@@ -13,10 +13,9 @@ public class Books {
 
         MainQueries mq = new MainQueries();
 
-        books = mq.searchBooks_byBookshelfIDAndToken(bookshelf_id, token);
-
+        books = mq.searchBooksByBookshelfIDAndToken(bookshelf_id, token);
         if(books.size() == 0){
-            this.errMessage = "books is not found";
+            this.errMessage = "user is not found";
         }
         else{
             this.errMessage = "";

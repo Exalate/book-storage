@@ -120,4 +120,55 @@ public class RestApiController {
 
     }
 
+    //ЗАПРОС НА РАЗРЕШЕНИЕ  /// ПЕРЕДЕЛАТЬ ВОЗВРАТ НУЛЛ?
+    @PostMapping           //ВОПРОС: как возвращать "ничего" ?
+    public Object postPetition(
+    @RequestParam(value = "x-access-token", defaultValue = "") String token,
+    @RequestParam(value = "bookId") int book_id,
+    @RequestParam(value = "text", defaultValue = "") String text
+    )throws SQLException, IOException {
+
+        MainQueries mq = new MainQueries();
+
+        int user_id = mq.searchUserIdByToken(token);
+
+        if(user_id != 0){
+            mq.addPetition(user_id, book_id, text);
+        }
+
+        mq.conClose();
+        return null;
+
+    }
+
+    @GetMapping("/bookshelves")
+    public PetitionsOfOthers getPetitions(
+            @RequestHeader(value = "x-access-token", defaultValue = "") String token
+    ) throws SQLException {
+        return new PetitionsOfOthers(token);
+    }
+
+    @PostMapping           //ВОПРОС: как возвращать "ничего" ?
+    public Object postResultPetition(
+            @RequestParam(value = "x-access-token", defaultValue = "") String token,
+            @RequestParam(value = "petition_id") int petition_id,
+            @RequestParam(value = "result") boolean result,
+            @RequestParam(value = "text", defaultValue = "") String text
+    )throws SQLException, IOException {
+
+        MainQueries mq = new MainQueries();
+
+        int user_id = mq.searchUserIdByToken(token);
+
+        if(user_id != 0){
+            mq.addResultPetition(text, result, petition_id);
+        }
+
+        mq.conClose();
+        return null;
+
+    }
+
+
+
 }

@@ -12,7 +12,7 @@ public class Register {
 
         MainQueries mq = new MainQueries();
 
-        if(mq.EMAIL_ALREADY_EXISTS(email)) {
+        if(mq.isEmailAlreadyExists(email)) {
             this.errMessage = "email already exists";
             this.token = "";
         }

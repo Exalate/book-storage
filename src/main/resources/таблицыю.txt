@@ -39,6 +39,25 @@ CREATE TABLE bookmarks
   page_number int NOT NULL
 )
 
+CREATE TABLE petitions
+(
+    petition_id serial NOT NULL,
+    petitioner_id int NOT NULL,
+    owner_id int NOT NULL,
+    book_id int NOT NULL,
+	petition_text varchar(1000),
+	result bool DEFAULT false,
+	owner_text varchar(1000),
+	PRIMARY KEY (petition_id)
+)
+
+CREATE TABLE permissions
+(
+  petitioner_id int NOT NULL,
+  book_id int NOT NULL,
+  term date
+)
+
 SELECT bookshelves.bookshelf_id, bookshelves.name
     FROM users, bookshelves
     WHERE users.user_id = bookshelves.user_id and users.token = 'g43g37u4vyu3536g'

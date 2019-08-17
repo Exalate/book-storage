@@ -14,25 +14,25 @@ public class Book {
 
         MainQueries mq = new MainQueries();
 
-        //ПЕРЕДЕЛАТЬ НА ОДИН ЗАПРОС, А НЕ ПОЛУЧЕНИЕ СНАЧАЛА ИД, А ПОТОМ ОСТАЛЬНОЕ
-
         int user_id = mq.searchUserIdByToken(token);
-
-        book = mq.newBook(name, description, bookshelf_id, user_id, text);
-
-        if(book.size() == 0){
+        if(user_id == 0){
             this.errMessage = "books is not found";
+            book = null;
         }
-        else{
-            this.errMessage = "";
-        }
-//        book = new HashMap<Integer, String>();
-//        this.errMessage = "";
-        mq.conClose();
+        else {
+            book = mq.newBook(name, description, bookshelf_id, user_id, text);
 
+            if (book.size() == 0) {
+                this.errMessage = "books is not found";
+            } else {
+                this.errMessage = "";
+            }
+        }
+
+        mq.conClose();
     }
 
-    public HashMap<Integer, String> getBooks() {
+    public HashMap<Integer, String> getBook() {
         return book;
     }
 

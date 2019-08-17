@@ -45,6 +45,15 @@ public class Testing {
 
         //System.out.println(mq.searchToken_byEmailAndPassword("oct601@mail.ru", "4859662"));
 
+//        System.out.println("Коннекшон екзистс: " + mq.CONNECTION_EXISTS());
+//
+//        mq.conClose();
+//
+//        System.out.println("Коннекшон екзистс: " + mq.CONNECTION_EXISTS());
+
+       // mq.addPetition(2, 16, "позязя");
+
+        mq.addResultPetition("ни за что!!!!11222", false, 1);
 
 
     }

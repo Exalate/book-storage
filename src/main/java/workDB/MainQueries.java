@@ -1,5 +1,7 @@
 package workDB;
 
+import hello.PetitionEntry;
+
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.sql.*;
@@ -15,6 +17,7 @@ public class MainQueries {
 
     private Connection connect = null;
 
+    //конструктор
     public MainQueries(){
 
         //подключение(?) драйвера
@@ -49,28 +52,25 @@ public class MainQueries {
 
     }
 
+    //закрытие соединения
     public void conClose() throws SQLException{
-        if(CONNECTION_EXISTS()) {
+        if(isConnectionExists()) {
             connect.close();
         }
     }
 
-    //проверка соединение работает
-    public boolean CONNECTION_EXISTS(){
-        if(connect != null){
-            return true;
+    //Проверка - коннект существует/открыт
+    public boolean isConnectionExists() throws SQLException {
+        if ( connect == null || connect.isClosed() == true ) {
+            return false;
         }
-        return false;
+        return true;
     }
 
-    //запись в таблицы users и bookshelves, если email не найдется в текущих записях таблицы users, Возвращает токен
+    //Создание нового пользователя
     public String newUser(String email, String password) throws SQLException{
 
-//        if (EMAIL_ALREADY_EXISTS(email)){
-//            token = "email already exists";
-//        }
-
-        int newUserID = -1;
+        int newUserID = 0;
 
         String newToken = getNewToken();
 
@@ -82,38 +82,40 @@ public class MainQueries {
 
         ResultSet gk = stmt.getGeneratedKeys();
         if(gk.next()) {
-            newUserID = gk.getInt("user_id");//gk.getLong("user_id");
+            newUserID = gk.getInt("user_id");
         }
         stmt.close();
 
-        newBookshelf("default_bookshelf", newUserID);
+        if(newUserID != 0) {
+            newBookshelf("default_bookshelf", newUserID);
+        }
 
         return newToken;
     }
 
-    //запись в таблицу bookshelves
-    public HashMap<Integer, String> newBookshelf(String name, int UserID) throws SQLException{
+    //Создание новой полки
+    public HashMap<Integer, String> newBookshelf(String name, int user_id) throws SQLException{
 
         HashMap<Integer, String> hm = new HashMap<>();
 
-        int newBookshelvesID = 0;
-
         PreparedStatement stmt = connect.prepareStatement("INSERT INTO bookshelves (name, user_id) VALUES (?, ?)", new String[] {"bookshelf_id"});
         stmt.setString(1, name);
-        stmt.setInt(2, UserID);
+        stmt.setInt(2, user_id);
         stmt.executeUpdate();
 
         ResultSet gk = stmt.getGeneratedKeys();
         if(gk.next()) {
-            hm.put(gk.getInt("bookshelf_id"), name);//gk.getLong("user_id");
+            hm.put(gk.getInt("bookshelf_id"), name);
         }
+
+        gk.close();
         stmt.close();
 
         return hm;
     }
 
-    //проверка, в таблице users существует определенный email
-    public boolean EMAIL_ALREADY_EXISTS(String email) throws SQLException{
+    //Проверка - email уже существует
+    public boolean isEmailAlreadyExists(String email) throws SQLException{
 
         boolean result = false;
 
@@ -122,10 +124,8 @@ public class MainQueries {
                 "select * from users where (email = '" + email + "')"
         );
 
-        while (rs.next())
-        {
+        if (rs.next()){
             result = true;
-            //System.out.println(rs.getString(1));
         }
         rs.close();
         st.close();
@@ -134,6 +134,7 @@ public class MainQueries {
 
     }
 
+    //Поиск токена
     public String searchTokenByEmailAndPassword(String email, String password) throws SQLException{
 
         String token = "";
@@ -143,10 +144,8 @@ public class MainQueries {
                 "select token from users where (email = '" + email + "' and password = '" + password + "')"
         );
 
-        while (rs.next())
-        {
+        if (rs.next()){
             token = rs.getString("token");
-            //System.out.println(rs.getString(1));
         }
         rs.close();
         st.close();
@@ -155,23 +154,24 @@ public class MainQueries {
 
     }
 
-    //запись в таблицу books(с разделением текста на страницы, записью в таблицу pages в отдельных методах)
-    public HashMap<Integer, String> newBook(String name, String description, int bookshelf_ID, int user_ID, String text) throws SQLException{
+    //Создание новой книги, создание страниц
+    public HashMap<Integer, String> newBook(String name, String description, int bookshelf_id, int user_id, String text) throws SQLException{
 
         HashMap<Integer, String> hm = new HashMap<>();
-        int newBookID = -1;
+        int newBookID = 0;
 
         PreparedStatement stmt = connect.prepareStatement("INSERT INTO books (name, user_id, description, bookshelf_id) VALUES (?, ?, ?, ?)", new String[] {"book_id"});
         stmt.setString(1, name);
-        stmt.setInt(2, user_ID);
+        stmt.setInt(2, user_id);
         stmt.setString(3, description);
-        stmt.setInt(4, bookshelf_ID);
+        stmt.setInt(4, bookshelf_id);
         stmt.executeUpdate();
 
         ResultSet gk = stmt.getGeneratedKeys();
         if(gk.next()) {
             newBookID = gk.getInt("book_id");
         }
+        gk.close();
         stmt.close();
 
         hm.put(newBookID, name);
@@ -184,56 +184,49 @@ public class MainQueries {
 
     }
 
-    //поиск ИД пользователя по токену(ЛИШНЕЕ?)
+    //Поиск ИД пользователя
     public int searchUserIdByToken(String token) throws SQLException{
 
-        int user_ID = 0;
+        int user_id = 0;
 
         Statement st = connect.createStatement();
         ResultSet rs = st.executeQuery(
                 "select * from users where (token = '" + token + "')"
         );
 
-        while (rs.next())
-        {
-            user_ID = rs.getInt("user_id");
-            //result = true;
-            //System.out.println(rs.getString(1));
-
+        if (rs.next()){
+            user_id = rs.getInt("user_id");
         }
         rs.close();
         st.close();
 
-        return user_ID;
+        return user_id;
 
     }
 
-    //поиск полки по токену, возврат ИД полки и имя полки
+    //Поиск полки
     public HashMap<Integer, String> searchBookshelves_byToken(String token) throws SQLException{
 
         HashMap<Integer, String> hM = new HashMap<Integer, String>();
 
         Statement st = connect.createStatement();
-
         ResultSet rs = st.executeQuery(
                 "select bookshelves.bookshelf_id, bookshelves.name " +
                         "from users, bookshelves " +
-                        "WHERE users.user_id = bookshelves.user_id and users.token = '" + token + "'"
+                        "where users.user_id = bookshelves.user_id and users.token = '" + token + "'"
         );
 
-        while (rs.next())
-        {
+        while (rs.next()){
             hM.put(rs.getInt("bookshelf_id"),rs.getString("name"));
         }
         rs.close();
         st.close();
 
         return hM;
-
     }
 
-    //поиск книг по полке и токену, возврат книга ИД и имя книги, ДОДЕЛАТЬ
-    public HashMap<Integer, String> searchBooks_byBookshelfIDAndToken(int bookshelf_ID, String token) throws SQLException{
+    //Поиск книг ДОДЕЛАТЬ?
+    public HashMap<Integer, String> searchBooksByBookshelfIDAndToken(int bookshelf_id, String token) throws SQLException{
 
         HashMap<Integer, String> hm = new HashMap<>();
 
@@ -242,11 +235,10 @@ public class MainQueries {
         ResultSet rs = st.executeQuery(
                 "select books.book_id, books.name " +
                         "from users, books " +
-                        "WHERE users.token = '" + token + "' and books.bookshelf_id = '" + bookshelf_ID + "' and users.user_id = books.user_id"
+                        "where users.token = '" + token + "' and books.bookshelf_id = '" + bookshelf_id + "' and users.user_id = books.user_id"
         );
 
-        while (rs.next())
-        {
+        while (rs.next()) {
             hm.put(rs.getInt("book_id"),rs.getString("name"));
         }
         rs.close();
@@ -256,52 +248,52 @@ public class MainQueries {
 
     }
 
-    //ВОЗМОЖНО ПЕРЕДЕЛАТЬ НА ОДИН ЗАПРОС
-    public HashMap<Integer, String> searchPageByBookID(int book_id) throws SQLException {
+    //Поиск страницы, если закладки нет - открывается первая страница, иначе страница с закладкой
+    public HashMap<Integer, String> searchPageByBookID(int book_id, int user_id) throws SQLException {
 
         HashMap<Integer, String> result = new HashMap<>();
         int pageNumberDefault = 1;
 
         Statement st = connect.createStatement();
 
+//        ResultSet rs = st.executeQuery(
+//            "select page_number, content, main_bookmark  from pages " +
+//                    "where (book_id = " + book_id + " " +
+//                    "and (main_bookmark = true or page_number = " + pageNumberDefault + ")) " +
+//                    "order by main_bookmark desc limit 1"
+//        );
         ResultSet rs = st.executeQuery(
-                "select page_number, content from pages where (book_id = '" + book_id + "' and main_bookmark = true)"
+            "select books.main_bookmark, pages.content, books.user_id from books, pages " +
+                    "where books.book_id = " + book_id + " and books.book_id = pages.book_id " +
+                    "and books.main_bookmark = pages.page_number"
         );
 
-        if (rs.next()) {
-            result.put(rs.getInt("page_number"), rs.getString("content"));
-            rs.close();
-        } else{
-            rs.close();
-
-        rs = st.executeQuery(
-                "select page_number, content from pages where (book_id = '" + book_id + "' and page_number = '" + pageNumberDefault + "')"
-        );
-
-        while (rs.next()) {
-            result.put(rs.getInt("page_number"), rs.getString("content"));
+        while(rs.next()){
+            if(rs.getInt(user_id) == user_id) {
+                result.put(rs.getInt("main_bookmark"), rs.getString("content"));
+                break;
+            }
         }
+
         rs.close();
-        }
-
         st.close();
 
         return result;
 
     }
 
+    //Поиск страницы
     public String searchPageByBookIDAndPageNumber(int book_id, int PageNumber) throws SQLException{
 
         String result = null;
 
         Statement st = connect.createStatement();
         ResultSet rs = st.executeQuery(
-                "select content from pages where (book_id = '" + book_id + "' and page_number = '" + PageNumber + "')"
+                "select content from pages where (book_id = " + book_id + " and page_number = " + PageNumber + ")"
         );
 
-        while (rs.next())
-        {
-            result = rs.getString("content");//result.put(rs.getInt("page_number"), rs.getString("content"));
+        if (rs.next()){
+            result = rs.getString("content");
         }
         rs.close();
         st.close();
@@ -309,6 +301,7 @@ public class MainQueries {
         return result;
     }
 
+    //Поиск последней страницы книги
     public HashMap<Integer, String> searchLastPageByBookID(int book_id) throws SQLException{
 
         HashMap<Integer, String> result = new HashMap<>();
@@ -329,47 +322,122 @@ public class MainQueries {
         return result;
     }
 
-    //проверка email и password, возврат токена
-    public String searchToken_byEmailAndPassword(String email, String password) throws SQLException{
-
-        String token = null;
-
-        Statement st = connect.createStatement();
-
-        ResultSet rs = st.executeQuery(
-                "select token from users " +
-                        "where email = '" + email + "' and password = '" + password + "'"
-        );
-
-        while (rs.next())
-        {
-            token = rs.getString("token");//hM.put(rs.getInt("bookshelf_id"),rs.getString("name"));
-        }
-
-        return token;
-
-    }
-
-    // ВОЗМОЖНО НУЖНО ПЕРЕДЕЛАТЬ, ЗАПРОС НА ИЗМЕНЕНИЯ ЗАПИСЕЙ
+    //Изменение закладки
     public void addNewMainBookmark(int pageNamber, int book_id) throws SQLException{
 
         Statement st = connect.createStatement();
 
         st.executeUpdate(
-                "update pages set main_bookmark = false " +
-                        "where book_id = " + book_id + " and main_bookmark = true"
-        );
-
-        st.executeUpdate(
-                "update pages set main_bookmark = true " +
-                        "where book_id = " + book_id + " and page_number = " + pageNamber + ""
+                "update books set main_bookmark = " + pageNamber +
+                        " where book_id = " + book_id
         );
 
         st.close();
 
     }
 
-    //запись всех страниц книги в таблицу pages
+    //НОВОЕ _______________________________________________________________________
+
+    public void addPetition(int petitioner_id, int book_id, String text) throws SQLException{
+
+        int owner_id;
+
+        owner_id = searchUserIDByBookID(book_id);
+
+        if(owner_id == 0){
+            return;
+        }
+
+        PreparedStatement stmt = connect.prepareStatement("INSERT INTO petitions (petitioner_id, owner_id, book_id, petition_text) VALUES (?, ?, ?, ?)");
+        stmt.setInt(1, petitioner_id);
+        stmt.setInt(2, owner_id);
+        stmt.setInt(3, book_id);
+        stmt.setString(4, text);
+        stmt.executeUpdate();
+
+        stmt.close();
+
+    }
+
+    public List<PetitionEntry> searchPetitions(int user_id) throws SQLException {
+
+        List<PetitionEntry> result = new ArrayList<>();
+
+        Statement st = connect.createStatement();
+        ResultSet rs = st.executeQuery(
+                "select " +
+                "petitions.petitioner_id," +
+                "petitions.petition_id," +
+                "petitions.book_id," +
+                "petitions.petition_text," +
+                "users.user_id," +
+                "users.email," +
+                "books.name " +
+                "from " +
+                "petitions " +
+                "left outer join users " +
+                "on petitions.owner_id = users.user_id " +
+                "left outer join books " +
+                "on petitions.book_id = books.book_id " +
+                "where (petitions.owner_id = " + user_id + " and petitions.owner_text is null)"
+        );
+
+        while (rs.next())
+        {
+            result.add(
+                    new PetitionEntry(
+                            rs.getInt("petition_id"),
+                            rs.getInt("petitioner_id"),
+                            rs.getString("email"),
+                            rs.getInt("book_id"),
+                            rs.getString("book_name"),
+                            rs.getString("petition_text")
+                    )
+            );
+        }
+        rs.close();
+        st.close();
+
+        return result;
+
+    }
+
+    public void addResultPetition(String text, boolean result, int petition_id) throws SQLException {
+
+        Statement st = connect.createStatement();
+
+        st.executeUpdate(
+                "update petitions set owner_text = '" + text + "', result = '" + result + "'" +
+                        " where petition_id = " + petition_id
+        );
+
+        st.close();
+
+    }
+
+    //=============================================================================
+
+    //поиск ид пользователя по ид книги
+    private int searchUserIDByBookID(int book_id) throws SQLException{
+
+        int result = 0;
+
+        Statement st = connect.createStatement();
+        ResultSet rs = st.executeQuery(
+                "select user_id from books where (book_id = " + book_id + ") limit 1"
+        );
+
+        if (rs.next()){
+            result = rs.getInt("user_id");
+        }
+        rs.close();
+        st.close();
+
+        return result;
+
+    }
+
+    //Создание страниц книги
     private void newPages(int book_ID, List<String> pages) throws SQLException{
 
         PreparedStatement stmt = connect.prepareStatement("INSERT INTO pages (page_number, book_ID, content) VALUES (?, ?, ?)");
@@ -398,10 +466,9 @@ public class MainQueries {
 
     }
 
-    //разбивка текста на страницы (блоки текста по 1000 символов) ПЕРЕДЕЛАТЬ НА ПРИВАТ
-    public List<String> splitPages(String text){
+    //разбивка текста на страницы (блоки текста по n символов) ПЕРЕДЕЛАТЬ НА ПРИВАТ
+    private List<String> splitPages(String text){
 
-        //пока так, нужно переделать
         List<String> arrL = new ArrayList<>();
 
         int splitSize = 100;

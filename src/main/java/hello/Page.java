@@ -26,7 +26,7 @@ public class Page {
             errMessage = "user invalid";
         }
         else{ //ПЕРЕДЕЛАТЬ ПОЛУЧЕНИЕ ДАННЫХ ИЗ ХАШМАПА (БЕЗ ЦИКЛА)
-            HashMap<Integer,String> hm = mq.searchPageByBookID(book_id);
+            HashMap<Integer,String> hm = mq.searchPageByBookID(book_id, user_id);
             String pageTextBuf = "";
             int numberPageBuf = 0;
             for(Map.Entry<Integer, String> pair : hm.entrySet()) {
