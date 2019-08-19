@@ -176,9 +176,7 @@ public class MainQueries {
 
         hm.put(newBookID, name);
 
-        List<String> pages = splitPages(text);
-
-        newPages(newBookID, pages);
+        newPages(newBookID, text);
 
         return hm;
 
@@ -438,7 +436,9 @@ public class MainQueries {
     }
 
     //Создание страниц книги
-    private void newPages(int book_ID, List<String> pages) throws SQLException{
+    private void newPages(int book_ID, String text) throws SQLException{
+
+        List<String> pages = splitPages(text);
 
         PreparedStatement stmt = connect.prepareStatement("INSERT INTO pages (page_number, book_ID, content) VALUES (?, ?, ?)");
 
