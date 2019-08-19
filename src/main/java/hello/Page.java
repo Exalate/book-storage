@@ -16,8 +16,6 @@ public class Page {
 
         MainQueries mq = new MainQueries();
 
-        //ПЕРЕДЕЛАТЬ НА ОДИН ЗАПРОС, А НЕ ПОЛУЧЕНИЕ СНАЧАЛА ИД, А ПОТОМ ОСТАЛЬНОЕ
-
         int user_id = mq.searchUserIdByToken(token);
 
         if(user_id == 0){
@@ -25,7 +23,7 @@ public class Page {
             pageNumber = 0;
             errMessage = "user invalid";
         }
-        else{ //ПЕРЕДЕЛАТЬ ПОЛУЧЕНИЕ ДАННЫХ ИЗ ХАШМАПА (БЕЗ ЦИКЛА)
+        else{
             HashMap<Integer,String> hm = mq.searchPageByBookID(book_id, user_id);
             String pageTextBuf = "";
             int numberPageBuf = 0;

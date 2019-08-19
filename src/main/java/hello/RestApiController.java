@@ -21,10 +21,6 @@ import workDB.MainQueries;
 @RestController
 public class RestApiController {
 
-    Path rootLocation = FileSystems.getDefault().getPath("C://client//");
-
-    //this.rootLocation = Paths.get(properties.getLocation());
-
     @PostMapping("/users/register")
     public Register postRegister(
             @RequestParam(value = "email", defaultValue = "") String email,
@@ -79,9 +75,6 @@ public class RestApiController {
             @PathVariable(value = "bookId") int book_id,
             @PathVariable(value = "pageNumber") int pageNumber
     ) throws SQLException {
-        //System.out.println(token+" ------- "+id);
-
-        //sout
 
         return new Page(book_id, token, pageNumber);
     }
@@ -93,7 +86,6 @@ public class RestApiController {
             @PathVariable(value = "pageNumber") int pageNumber
     ) throws SQLException {
 
-        //ОСТАВИТЬ ТУТ ?
         MainQueries mq = new MainQueries();
         int user_id = mq.searchUserIdByToken(token);
         if(user_id != 0){
@@ -101,7 +93,7 @@ public class RestApiController {
         }
         mq.conClose();
 
-        return null;//Bookmark(book_id, token, pageNumber);
+        return null;
     }
 
     @PostMapping("/books/upload")
@@ -120,54 +112,54 @@ public class RestApiController {
 
     }
 
-    //ЗАПРОС НА РАЗРЕШЕНИЕ  /// ПЕРЕДЕЛАТЬ ВОЗВРАТ НУЛЛ?
-    @PostMapping           //ВОПРОС: как возвращать "ничего" ?
-    public Object postPetition(
-    @RequestParam(value = "x-access-token", defaultValue = "") String token,
-    @RequestParam(value = "bookId") int book_id,
-    @RequestParam(value = "text", defaultValue = "") String text
-    )throws SQLException, IOException {
+//    //ЗАПРОС НА РАЗРЕШЕНИЕ  /// ПЕРЕДЕЛАТЬ ВОЗВРАТ НУЛЛ?
+//    @PostMapping           //ВОПРОС: как возвращать "ничего" ?
+//    public Object postPetition(
+//    @RequestParam(value = "x-access-token", defaultValue = "") String token,
+//    @RequestParam(value = "bookId") int book_id,
+//    @RequestParam(value = "text", defaultValue = "") String text
+//    )throws SQLException, IOException {
+//
+//        MainQueries mq = new MainQueries();
+//
+//        int user_id = mq.searchUserIdByToken(token);
+//
+//        if(user_id != 0){
+//            mq.addPetition(user_id, book_id, text);
+//        }
+//
+//        mq.conClose();
+//        return null;
+//
+//    }
 
-        MainQueries mq = new MainQueries();
-
-        int user_id = mq.searchUserIdByToken(token);
-
-        if(user_id != 0){
-            mq.addPetition(user_id, book_id, text);
-        }
-
-        mq.conClose();
-        return null;
-
-    }
-
-    @GetMapping("/bookshelves")
-    public PetitionsOfOthers getPetitions(
-            @RequestHeader(value = "x-access-token", defaultValue = "") String token
-    ) throws SQLException {
-        return new PetitionsOfOthers(token);
-    }
-
-    @PostMapping           //ВОПРОС: как возвращать "ничего" ?
-    public Object postResultPetition(
-            @RequestParam(value = "x-access-token", defaultValue = "") String token,
-            @RequestParam(value = "petition_id") int petition_id,
-            @RequestParam(value = "result") boolean result,
-            @RequestParam(value = "text", defaultValue = "") String text
-    )throws SQLException, IOException {
-
-        MainQueries mq = new MainQueries();
-
-        int user_id = mq.searchUserIdByToken(token);
-
-        if(user_id != 0){
-            mq.addResultPetition(text, result, petition_id);
-        }
-
-        mq.conClose();
-        return null;
-
-    }
+//    @GetMapping("/bookshelves")
+//    public PetitionsOfOthers getPetitions(
+//            @RequestHeader(value = "x-access-token", defaultValue = "") String token
+//    ) throws SQLException {
+//        return new PetitionsOfOthers(token);
+//    }
+//
+//    @PostMapping           //ВОПРОС: как возвращать "ничего" ?
+//    public Object postResultPetition(
+//            @RequestParam(value = "x-access-token", defaultValue = "") String token,
+//            @RequestParam(value = "petition_id") int petition_id,
+//            @RequestParam(value = "result") boolean result,
+//            @RequestParam(value = "text", defaultValue = "") String text
+//    )throws SQLException, IOException {
+//
+//        MainQueries mq = new MainQueries();
+//
+//        int user_id = mq.searchUserIdByToken(token);
+//
+//        if(user_id != 0){
+//            mq.addResultPetition(text, result, petition_id);
+//        }
+//
+//        mq.conClose();
+//        return null;
+//
+//    }
 
 
 

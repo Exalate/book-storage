@@ -1,6 +1,7 @@
 package workDB;
 
 import hello.PetitionEntry;
+import hello.RunPages;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
@@ -42,12 +43,6 @@ public class MainQueries {
 
             e.printStackTrace();
             return;
-        }
-
-        if (connect == null) {
-//            try {
-//                throw new SQLException();
-
         }
 
     }
@@ -176,7 +171,7 @@ public class MainQueries {
 
         hm.put(newBookID, name);
 
-        newPages(newBookID, text);
+        RunPages rp = new RunPages(newBookID,text);
 
         return hm;
 
@@ -254,12 +249,6 @@ public class MainQueries {
 
         Statement st = connect.createStatement();
 
-//        ResultSet rs = st.executeQuery(
-//            "select page_number, content, main_bookmark  from pages " +
-//                    "where (book_id = " + book_id + " " +
-//                    "and (main_bookmark = true or page_number = " + pageNumberDefault + ")) " +
-//                    "order by main_bookmark desc limit 1"
-//        );
         ResultSet rs = st.executeQuery(
             "select books.main_bookmark, pages.content, books.user_id from books, pages " +
                     "where books.book_id = " + book_id + " and books.book_id = pages.book_id " +
@@ -333,8 +322,6 @@ public class MainQueries {
         st.close();
 
     }
-
-    //НОВОЕ _______________________________________________________________________
 
     public void addPetition(int petitioner_id, int book_id, String text) throws SQLException{
 
@@ -413,8 +400,6 @@ public class MainQueries {
 
     }
 
-    //=============================================================================
-
     //поиск ид пользователя по ид книги
     private int searchUserIDByBookID(int book_id) throws SQLException{
 
@@ -436,7 +421,7 @@ public class MainQueries {
     }
 
     //Создание страниц книги
-    private void newPages(int book_ID, String text) throws SQLException{
+    public void newPages (int book_ID, String text) throws SQLException{
 
         List<String> pages = splitPages(text);
 
